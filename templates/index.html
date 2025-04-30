@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            list-style-type: none;
+            margin: 0;
+        }
+        #messages li {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            background-color: #f1f0f0;
+            max-width: 60%;
+            word-wrap: break-word;
+        }
+        #messages li.me {
+            background-color: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+        form {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+    <script>
+        $(document).ready(function() {
+            var socket = io();
+            var username;
+
+            $('form').submit(function() {
+                var message = $('#message').val();
+                socket.emit('message', {'user': username, 'msg': message});
+                $('#message').val('');
+                return false;
+            });
+
+            socket.on('connect', function() {
+                username = prompt("Enter your username");
+                $('#username').val(username);
+                socket.emit('join', {'username': username});
+            });
+
+            socket.on('message', function(data) {
+                console.log('Received message:', data); // Debugging line
+                var msgClass = data.user === username ? 'me' : '';
+                $('#messages').append(
+                    $('<li class="' + msgClass + '">').html('<strong>' + data.user + ':</strong> ' + data.msg)
+                );
+                $('#messages').scrollTop($('#messages')[0].scrollHeight);
+            });
+
+            socket.on('error', function(data) {
+                alert(data.message);
+            });
+        });
+    </script>
+</head>
+<body>
+    <ul id="messages"></ul>
+    <form action="">
+        <input id="username" type="hidden">
+        <input id="message" type="text" autocomplete="off" placeholder="Type your message here...">
+        <button>Send</button>
+    </form>
+</body>
+</html>
+
